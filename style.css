@@ -262,56 +262,61 @@
     pointer-events: none;
   }
 
-  /* Constellation styles */
-  .constellation {
-    position: fixed;
-    width: 1px;
-    height: 1px;
-    background: transparent;
-    border-radius: 50%;
-    z-index: -1;
-    animation: constellation-glow 5s infinite ease-in-out alternate;
-  }
+/* Zodiac Constellation styles */
+.zodiac-constellation {
+  position: fixed;
+  width: 1px; /* Small base size for the 'star' */
+  height: 1px; /* Small base size for the 'star' */
+  background: transparent; /* Stars are created by box-shadow */
+  border-radius: 50%;
+  z-index: -1;
+  animation: zodiac-glow 6s infinite ease-in-out alternate;
+}
 
-  @keyframes constellation-glow {
-    0% { opacity: 0; box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0); }
-    50% { opacity: 1; box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.8); }
-    100% { opacity: 0; box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0); }
-  }
+@keyframes zodiac-glow {
+  0% { opacity: 0; box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0); }
+  50% { opacity: 1; box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.9); }
+  100% { opacity: 0; box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0); }
+}
 
-  .constellation-1 {
-    top: 10%;
-    left: 15%;
-    box-shadow:
-      0 0 0 1px #fff,
-      -20px -30px 0 1px rgba(255,255,255,0.8),
-      20px -30px 0 1px rgba(255,255,255,0.8),
-      -40px -60px 0 0.8px rgba(255,255,255,0.7),
-      40px -60px 0 0.8px rgba(255,255,255,0.7);
-    animation-delay: 0s;
-  }
+/* Aries (Ram) */
+.aries { top: 10%; left: 10%; animation-delay: 0s;
+  box-shadow: 0 0 0 1px #fff, 5px 5px 0 0.8px rgba(255,255,255,0.7), -5px 5px 0 0.8px rgba(255,255,255,0.7), 0 10px 0 0.6px rgba(255,255,255,0.5); }
+/* Taurus (Bull) */
+.taurus { top: 20%; left: 80%; animation-delay: 0.5s;
+  box-shadow: 0 0 0 1px #fff, 10px 0 0 0.8px rgba(255,255,255,0.7), -10px 0 0 0.8px rgba(255,255,255,0.7), 0 10px 0 0.6px rgba(255,255,255,0.5); }
+/* Gemini (Twins) */
+.gemini { top: 35%; left: 20%; animation-delay: 1s;
+  box-shadow: 0 0 0 1px #fff, 10px 10px 0 0.8px rgba(255,255,255,0.7), -10px -10px 0 0.8px rgba(255,255,255,0.7), 0 20px 0 0.6px rgba(255,255,255,0.5); }
+/* Cancer (Crab) */
+.cancer { top: 50%; left: 90%; animation-delay: 1.5s;
+  box-shadow: 0 0 0 1px #fff, -5px -5px 0 0.8px rgba(255,255,255,0.7), 5px -5px 0 0.8px rgba(255,255,255,0.7), 0 -10px 0 0.6px rgba(255,255,255,0.5); }
+/* Leo (Lion) */
+.leo { top: 60%; left: 5%; animation-delay: 2s;
+  box-shadow: 0 0 0 1px #fff, 0 10px 0 0.8px rgba(255,255,255,0.7), 10px 5px 0 0.8px rgba(255,255,255,0.7), 20px 0 0 0.6px rgba(255,255,255,0.5); }
+/* Virgo (Virgin) */
+.virgo { top: 75%; left: 75%; animation-delay: 2.5s;
+  box-shadow: 0 0 0 1px #fff, -10px 0 0 0.8px rgba(255,255,255,0.7), -20px 5px 0 0.8px rgba(255,255,255,0.7), -30px 0 0 0.6px rgba(255,255,255,0.5); }
+/* Libra (Scales) */
+.libra { top: 15%; left: 45%; animation-delay: 3s;
+  box-shadow: 0 0 0 1px #fff, 10px 0 0 0.8px rgba(255,255,255,0.7), -10px 0 0 0.8px rgba(255,255,255,0.7), 0 -10px 0 0.6px rgba(255,255,255,0.5); }
+/* Scorpio (Scorpion) */
+.scorpio { top: 30%; left: 60%; animation-delay: 3.5s;
+  box-shadow: 0 0 0 1px #fff, -5px 5px 0 0.8px rgba(255,255,255,0.7), -10px 0 0 0.8px rgba(255,255,255,0.7), -15px -5px 0 0.6px rgba(255,255,255,0.5); }
+/* Sagittarius (Archer) */
+.sagittarius { top: 45%; left: 10%; animation-delay: 4s;
+  box-shadow: 0 0 0 1px #fff, 10px -10px 0 0.8px rgba(255,255,255,0.7), 20px 0 0 0.8px rgba(255,255,255,0.7), 30px 10px 0 0.6px rgba(255,255,255,0.5); }
+/* Capricorn (Goat) */
+.capricorn { top: 65%; left: 95%; animation-delay: 4.5s;
+  box-shadow: 0 0 0 1px #fff, -5px -5px 0 0.8px rgba(255,255,255,0.7), 0 -10px 0 0.8px rgba(255,255,255,0.7), 5px -15px 0 0.6px rgba(255,255,255,0.5); }
+/* Aquarius (Water Bearer) */
+.aquarius { top: 85%; left: 20%; animation-delay: 5s;
+  box-shadow: 0 0 0 1px #fff, 10px 0 0 0.8px rgba(255,255,255,0.7), 0 10px 0 0.8px rgba(255,255,255,0.7), -10px 10px 0 0.6px rgba(255,255,255,0.5); }
+/* Pisces (Fish) */
+.pisces { top: 5%; left: 70%; animation-delay: 5.5s;
+  box-shadow: 0 0 0 1px #fff, -10px -5px 0 0.8px rgba(255,255,255,0.7), 10px 5px 0 0.8px rgba(255,255,255,0.7), 0 10px 0 0.6px rgba(255,255,255,0.5); }
 
-  .constellation-2 {
-    top: 40%;
-    left: 70%;
-    box-shadow:
-      0 0 0 1px #fff,
-      -15px 15px 0 1px rgba(255,255,255,0.8),
-      -30px 30px 0 0.8px rgba(255,255,255,0.7),
-      -45px 45px 0 0.6px rgba(255,255,255,0.6);
-    animation-delay: 1.5s;
-  }
 
-  .constellation-3 {
-    top: 80%;
-    left: 30%;
-    box-shadow:
-      0 0 0 1px #fff,
-      10px 0 0 1px rgba(255,255,255,0.8),
-      0 10px 0 1px rgba(255,255,255,0.8),
-      10px 10px 0 0.8px rgba(255,255,255,0.7);
-    animation-delay: 3s;
-  }
 
   body::before {
     content: '';
