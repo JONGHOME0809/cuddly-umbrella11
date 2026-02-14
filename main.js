@@ -66,7 +66,9 @@ function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
 function validDate(y,m,d){
   if(!y||!m||!d) return false;
-  if(m<1||m>12||d<1||d>31) return false;
+  const currentYear = new Date().getFullYear();
+  if (y < 1900 || y > currentYear) return false; // Year validation
+  if(m<1||m>12||d<1||d>31) return false; // Month and Day basic validation
   const dt = new Date(y, m-1, d);
   return dt.getFullYear()===y && dt.getMonth()===(m-1) && dt.getDate()===d;
 }
