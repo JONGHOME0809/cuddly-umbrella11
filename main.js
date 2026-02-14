@@ -374,6 +374,9 @@ function drawCard(r){
   canvas.classList.remove("hidden");
   downloadLink.classList.remove("hidden");
 
+  // seeded RNG for consistent constellation patterns on the card
+  const cardRng = seededRand(r.seedStr + "card");
+
   // background
   ctx.fillStyle = "#07070b";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -390,6 +393,60 @@ function drawCard(r){
   g2.addColorStop(1,"rgba(0,229,255,0)");
   ctx.fillStyle = g2;
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // --- Draw Constellations ---
+  // Helper function to draw a single constellation pattern
+  function drawConstellationPattern(patternRng, centerX, centerY, scale, baseColor) {
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scale, scale);
+
+    const stars = [
+      {x: 0, y: 0, r: 2},
+      {x: 20 + patternRng()*10, y: 30 + patternRng()*10, r: 1.5},
+      {x: -25 - patternRng()*10, y: 25 + patternRng()*10, r: 1.8},
+      {x: 10 + patternRng()*10, y: -40 - patternRng()*10, r: 1.2},
+      {x: -30 - patternRng()*10, y: -10 - patternRng()*10, r: 1.3},
+      {x: 40 + patternRng()*10, y: 10 + patternRng()*10, r: 1.6},
+      {x: -15 - patternRng()*10, y: -35 - patternRng()*10, r: 1.1},
+    ];
+
+    ctx.fillStyle = baseColor;
+    ctx.shadowBlur = 15; // Enhanced glow
+    ctx.shadowColor = baseColor;
+    ctx.lineWidth = 1.5; // Thicker lines
+    ctx.strokeStyle = baseColor;
+
+    // Draw stars
+    for (const star of stars) {
+      ctx.beginPath();
+      // Vary size and opacity for a twinkling/glowing effect on static image
+      ctx.globalAlpha = 0.6 + patternRng() * 0.4; // Random opacity
+      ctx.arc(star.x, star.y, star.r * (0.8 + patternRng() * 0.4), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1; // Reset alpha
+
+    // Connect stars (simple pattern)
+    ctx.beginPath();
+    ctx.moveTo(stars[0].x, stars[0].y);
+    ctx.lineTo(stars[1].x, stars[1].y);
+    ctx.lineTo(stars[2].x, stars[2].y);
+    ctx.moveTo(stars[0].x, stars[0].y);
+    ctx.lineTo(stars[3].x, stars[3].y);
+    ctx.lineTo(stars[4].x, stars[4].y);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Draw multiple constellation patterns across the canvas
+  drawConstellationPattern(seededRand(cardRng()*1000), canvas.width * 0.2, canvas.height * 0.2, 1.2, "rgba(255,255,255,0.7)");
+  drawConstellationPattern(seededRand(cardRng()*1000), canvas.width * 0.7, canvas.height * 0.3, 1.0, "rgba(255,255,255,0.6)");
+  drawConstellationPattern(seededRand(cardRng()*1000), canvas.width * 0.4, canvas.height * 0.6, 1.1, "rgba(255,255,255,0.8)");
+  drawConstellationPattern(seededRand(cardRng()*1000), canvas.width * 0.8, canvas.height * 0.8, 0.9, "rgba(255,255,255,0.5)");
+  drawConstellationPattern(seededRand(cardRng()*1000), canvas.width * 0.1, canvas.height * 0.9, 1.3, "rgba(255,255,255,0.75)");
+
 
   // card panel
   roundRect(ctx, 70, 110, 940, 1100, 40, "rgba(15,16,24,0.92)", "rgba(255,255,255,0.10)");
