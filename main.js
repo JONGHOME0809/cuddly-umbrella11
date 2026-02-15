@@ -9,7 +9,9 @@ const resultWrap = $("resultWrap");
 
 const typeLine = $("typeLine");
 const scoreNum = $("scoreNum");
+const riskNum = $("riskNum"); // Added
 const doomDateEl = $("doomDate");
+const countdownTimer = $("countdownTimer"); // Added
 const doomNoteEl = $("doomNote");
 const triggerEl = $("trigger");
 const triggerNoteEl = $("triggerNote");
@@ -30,7 +32,7 @@ const codeBtn = $("codeBtn");
 const payLink = $("payLink");
 
 // TODO: replace with your PayPal / Stripe checkout link
-payLink.href = "https://www.paypal.com"; // placeholder
+// payLink.href = "https://www.paypal.com"; // placeholder (now handled by SDK)
 
 // --- Seeded RNG (deterministic per birthdate) ---
 function xmur3(str){
@@ -178,8 +180,9 @@ function computeResult(y,m,d){
   // Score
   const base = (y*3 + m*11 + d*7) % 100;
   const stability = (m*d + y) % 30;
-  const risk = (d*13 + m*9) % 40;
-  const score = clamp(Math.round(base + (stability - risk/2)), 0, 100);
+  const riskRaw = (d*13 + m*9) % 40; // 0-39
+  const riskPercent = Math.min(100, Math.round((riskRaw / 39) * 100)); // Added
+  const score = clamp(Math.round(base + (stability - riskRaw/2)), 0, 100);
 
   // Archetype (rare possibility)
   const arche = pickByWeight(rng, archetypes);
@@ -205,7 +208,7 @@ function computeResult(y,m,d){
   // Unlock code (deterministic but not obvious)
   const code = makeCode(y,m,d);
 
-  return {seedStr, arche, trig, doom, score, preview, avoid, todo, premium, code};
+  return {seedStr, arche, trig, doom, score, riskPercent, preview, avoid, todo, premium, code};
 }
 
 function shuffleWithRng(arr, rng){
@@ -260,16 +263,22 @@ function buildPremiumNarrative(rng, ctx){
 
 // --- UI ---
 let lastResult = null;
+let countdownInterval; // Added for 24h timer
 
 function setPremiumLocked(){
   premiumOut.classList.add("hidden");
   avoidListEl.classList.add("blurred");
   doListEl.classList.add("blurred");
+  previewTextEl.classList.add("blurred"); // Blur preview text
+  countdownTimer.classList.remove("hidden"); // Show countdown timer
 }
 function setPremiumUnlocked(){
   premiumOut.classList.remove("hidden");
   avoidListEl.classList.remove("blurred");
   doListEl.classList.remove("blurred");
+  previewTextEl.classList.remove("blurred"); // Unblur preview text
+  countdownTimer.classList.add("hidden"); // Hide countdown timer
+  if (countdownInterval) clearInterval(countdownInterval); // Clear countdown interval
 }
 
 function renderResult(r){
@@ -277,6 +286,7 @@ function renderResult(r){
 
   typeLine.textContent = `${r.arche.name} • ${badgeText(r.arche)} • ${r.seedStr}`;
   scoreNum.textContent = r.score;
+  riskNum.textContent = `${r.riskPercent}% Risk Window`; // Display risk percentage
   doomDateEl.textContent = formatDate(r.doom);
   doomNoteEl.textContent = (r.score < 40)
     ? "Low luck window. Don’t gamble."
@@ -301,6 +311,7 @@ function renderResult(r){
     setPremiumUnlocked();
   } else {
     setPremiumLocked();
+    startCountdown(); // Start countdown when locked
   }
 }
 
@@ -472,10 +483,6 @@ function drawCard(r){
   ctx.fillText(String(r.score), 120, 455);
 
   // doom date
-  ctx.fillStyle = "rgba(233,236,255,0.65)";
-  ctx.font = "800 22px ui-sans-serif, system-ui";
-  ctx.fillText("Your Doom Date", 120, 525);
-
   ctx.fillStyle = "#ff4d6d";
   ctx.font = "900 58px ui-sans-serif, system-ui";
   ctx.fillText(formatDate(r.doom), 120, 590);
@@ -577,6 +584,7 @@ codeBtn.addEventListener("click", ()=>{
     alert("Invalid code.");
   }
 });
+
 
 // Auto-unlock if already saved
 if(localStorage.getItem("dd_unlocked")==="1"){

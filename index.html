@@ -1,10 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Doom Date™ | Astrology Scan</title>
-  <link rel="stylesheet" href="style.css"/>
+
   <meta name="description" content="Find your Doom Date and the exact Exit Route in 20 seconds."/>
 </head>
 <body>
@@ -96,6 +93,11 @@
               <div id="scoreNum" class="score-num">—</div>
               <p id="scoreDescription" class="result-description">Your Fortune Score reflects your cosmic alignment. Higher scores indicate periods of greater potential for success and harmony. Use this insight to navigate challenges with confidence.</p>
             </div>
+            <div class="risk-score">
+              <div class="score-label">Risk Window</div>
+              <div id="riskNum" class="score-num">—</div>
+              <p id="riskDescription" class="result-description">This indicates the likelihood of facing challenging situations. A higher percentage suggests increased vigilance is needed.</p>
+            </div>
           </div>
 
           <div class="grid">
@@ -133,16 +135,21 @@
         <section id="unlock" class="card paywall">
           <div class="paywall-head">
             <div>
-              <div class="kicker">PREMIUM UNLOCK</div>
+              <div class="kicker"><span class="lock-icon">🔒</span> PREMIUM UNLOCK</div>
               <h2>Exit Route (what to avoid + what to do)</h2>
               <p class="sub2">This is the part people screenshot. Specific, sharp, and personal.</p>
             </div>
             <div class="priceBox">
               <div class="was">Normally $19</div>
-              <div class="now">$7.99</div>
+              <div class="now">$9.99</div>
               <div class="micro">one-time unlock</div>
             </div>
           </div>
+
+          <div class="urgency-message">
+            지금 해제하지 않으면 사라짐.
+          </div>
+          <div class="countdown-timer" id="countdownTimer"></div>
 
           <div class="premiumGrid">
             <div class="lockBox">
@@ -160,7 +167,7 @@
           </div>
 
           <div class="unlockRow">
-            <a id="payLink" class="primary linkBtn" target="_blank" rel="noreferrer">Unlock via PayPal</a>
+            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=klo081921@gmail.com&item_name=Premium%20Unlock&amount=9.99&currency_code=USD&no_shipping=1&no_note=1&return=https://cuddly-umbrella11.pages.dev/?paid=true&cancel_return=https://cuddly-umbrella11.pages.dev/" class="primary">Unlock My Risk Map – $9.99</a>
             <div class="codeBox">
               <input id="codeInput" placeholder="Have a code? Enter here"/>
               <button id="codeBtn" class="secondary">Unlock</button>
@@ -189,5 +196,3 @@
   <script src="main.js"></script>
 </body>
 </html>
-
-
