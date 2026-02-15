@@ -9,9 +9,9 @@ const resultWrap = $("resultWrap");
 
 const typeLine = $("typeLine");
 const scoreNum = $("scoreNum");
-const riskNum = $("riskNum"); // Added
+const riskNum = $("riskNum");
 const doomDateEl = $("doomDate");
-const countdownTimer = $("countdownTimer"); // Added
+const countdownTimer = $("countdownTimer");
 const doomNoteEl = $("doomNote");
 const triggerEl = $("trigger");
 const triggerNoteEl = $("triggerNote");
@@ -30,9 +30,6 @@ const downloadLink = $("downloadLink");
 const codeInput = $("codeInput");
 const codeBtn = $("codeBtn");
 const payLink = $("payLink");
-
-// TODO: replace with your PayPal / Stripe checkout link
-// payLink.href = "https://www.paypal.com"; // placeholder (now handled by SDK)
 
 // --- Seeded RNG (deterministic per birthdate) ---
 function xmur3(str){
@@ -101,60 +98,84 @@ const triggers = [
   {k:"Health", note:"sleep debt → mood spiral; don’t overpush"},
 ];
 
-const previewLines = [
-  "Your pattern: you win when you move quietly, then strike publicly.",
-  "The universe isn’t blocking you — it’s filtering who deserves access to you.",
-  "Your luck spikes after you cut one draining habit (or person).",
-  "You’re not unlucky. You’re just early — and early looks like failure.",
-  "You have ‘magnet weeks’ where people offer help without asking.",
-  "Your biggest enemy isn’t fate. It’s rushing when your timing is wrong."
-];
-
-const avoidPool = {
-  Money:[
-    "Signing anything fast (especially ‘limited time’ deals)",
-    "Buying expensive ‘solution’ products when emotional",
-    "Lending money / fronting costs for friends"
-  ],
-  Love:[
-    "Double-text spirals / checking phones / testing loyalty",
-    "Confessing feelings on a high-stress day",
-    "Reopening old drama ‘for closure’"
-  ],
-  Career:[
-    "Arguing with authority in public channels",
-    "Launching without a checklist (missing one key detail)",
-    "Taking on extra work to ‘prove’ yourself"
-  ],
-  Health:[
-    "Caffeine late afternoon (sleep wrecks your week)",
-    "Skipping meals then bingeing at night",
-    "Hard workouts when you’re already depleted"
-  ]
+const zodiacTeasers = {
+  Aries: {
+    strength: "Your pioneering spirit ignites new paths.",
+    weakness: "Impatience clouds judgment, leading to missed details.",
+    warning: "Beware sudden ventures. Not all fires are meant to burn."
+  },
+  Taurus: {
+    strength: "Unwavering resolve builds empires from dust.",
+    weakness: "Stubbornness blinds you to essential shifts.",
+    warning: "Resist comfort. Growth demands unearthing old roots."
+  },
+  Gemini: {
+    strength: "Your adaptable mind weaves connections effortlessly.",
+    weakness: "Scattered focus dilutes your potent energy.",
+    warning: "Guard your words. What's spoken lightly may echo deeply."
+  },
+  Cancer: {
+    strength: "Intuition guides your protective, nurturing soul.",
+    weakness: "Emotional currents can pull you into isolation.",
+    warning: "Seek not solace in shadows. True safety lies in the light."
+  },
+  Leo: {
+    strength: "Radiant confidence draws all eyes to your stage.",
+    weakness: "Pride obscures subtle warnings from trusted allies.",
+    warning: "Not every roar commands. Listen closely for truth."
+  },
+  Virgo: {
+    strength: "Acute precision perfects every intricate detail.",
+    weakness: "Overthinking paralyzes action, delaying breakthrough.",
+    warning: "Chaos holds hidden order. Don't over-engineer fate."
+  },
+  Libra: {
+    strength: "Harmonious balance seeks justice in every interaction.",
+    weakness: "Indecision allows pivotal moments to slip away.",
+    warning: "Your reflection holds truth. Trust your own scale."
+  },
+  Scorpio: {
+    strength: "Intense depth unearths hidden truths and power.",
+    weakness: "Obsession transforms insight into binding chains.",
+    warning: "Control is an illusion. Embrace the flow of what is lost."
+  },
+  Sagittarius: {
+    strength: "Boundless optimism fuels your quest for truth.",
+    weakness: "Restlessness sacrifices depth for fleeting novelty.",
+    warning: "Not all horizons promise freedom. Some lead to confinement."
+  },
+  Capricorn: {
+    strength: "Disciplined ambition conquers towering heights.",
+    weakness: "Fear of vulnerability obstructs authentic connection.",
+    warning: "The summit is cold. Remember the warmth of roots."
+  },
+  Aquarius: {
+    strength: "Visionary thought pioneers new frontiers.",
+    weakness: "Detachment alienates those who could elevate you.",
+    warning: "Innovation requires grounding. Don't lose sight of the human."
+  },
+  Pisces: {
+    strength: "Empathic depth connects you to universal currents.",
+    weakness: "Escapism blurs the lines between dreams and reality.",
+    warning: "The tide shifts. Distinguish mirage from true reflection."
+  }
 };
 
-const doPool = {
-  Money:[
-    "Delay purchases by 24 hours; only buy if still calm",
-    "Negotiate: ask for 10% more / 10% less risk",
-    "Track 3 days of spending — cut the leak"
-  ],
-  Love:[
-    "Keep messages simple; ask one clear question",
-    "Plan one ‘quality’ meetup instead of constant texting",
-    "Set a boundary: no emotional talks after midnight"
-  ],
-  Career:[
-    "Ship one small win daily (momentum beats perfection)",
-    "Write your ‘no list’ — decline 1 low-value task",
-    "Document everything (you’ll need receipts)"
-  ],
-  Health:[
-    "Sleep first: 7.5h for 3 nights = mood reset",
-    "20 min walk sunlight + water (fixes your baseline)",
-    "Stretch 10 minutes before bed — nervous system downshift"
-  ]
-};
+function getZodiacSign(month, day) {
+  if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "Aquarius";
+  if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return "Pisces";
+  if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "Aries";
+  if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "Taurus";
+  if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return "Gemini";
+  if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return "Cancer";
+  if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "Leo";
+  if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "Virgo";
+  if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return "Libra";
+  if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return "Scorpio";
+  if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return "Sagittarius";
+  if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "Capricorn";
+  return "Unknown";
+}
 
 function pickByWeight(rng, arr){
   const total = arr.reduce((s,a)=>s+a.rarity,0);
@@ -181,7 +202,7 @@ function computeResult(y,m,d){
   const base = (y*3 + m*11 + d*7) % 100;
   const stability = (m*d + y) % 30;
   const riskRaw = (d*13 + m*9) % 40; // 0-39
-  const riskPercent = Math.min(100, Math.round((riskRaw / 39) * 100)); // Added
+  const riskPercent = Math.min(100, Math.round((riskRaw / 39) * 100));
   const score = clamp(Math.round(base + (stability - riskRaw/2)), 0, 100);
 
   // Archetype (rare possibility)
@@ -195,8 +216,10 @@ function computeResult(y,m,d){
   // Trigger
   const trig = triggers[Math.floor(rng()*triggers.length)];
 
-  // Preview text
-  const preview = previewLines[Math.floor(rng()*previewLines.length)];
+  // Zodiac-based personality teaser
+  const zodiacSign = getZodiacSign(m, d);
+  const teaser = zodiacTeasers[zodiacSign];
+  const preview = `${teaser.strength}\n${teaser.weakness}\n${teaser.warning}`;
 
   // Premium lists
   const avoid = shuffleWithRng([...avoidPool[trig.k]], rng).slice(0,3);
@@ -263,22 +286,22 @@ function buildPremiumNarrative(rng, ctx){
 
 // --- UI ---
 let lastResult = null;
-let countdownInterval; // Added for 24h timer
+let countdownInterval;
 
 function setPremiumLocked(){
   premiumOut.classList.add("hidden");
   avoidListEl.classList.add("blurred");
   doListEl.classList.add("blurred");
-  previewTextEl.classList.add("blurred"); // Blur preview text
-  countdownTimer.classList.remove("hidden"); // Show countdown timer
+  // previewTextEl.classList.add("blurred"); // Removed blur
+  countdownTimer.classList.remove("hidden");
 }
 function setPremiumUnlocked(){
   premiumOut.classList.remove("hidden");
   avoidListEl.classList.remove("blurred");
   doListEl.classList.remove("blurred");
-  previewTextEl.classList.remove("blurred"); // Unblur preview text
-  countdownTimer.classList.add("hidden"); // Hide countdown timer
-  if (countdownInterval) clearInterval(countdownInterval); // Clear countdown interval
+  // previewTextEl.classList.remove("blurred"); // Removed blur
+  countdownTimer.classList.add("hidden");
+  if (countdownInterval) clearInterval(countdownInterval);
 }
 
 function renderResult(r){
@@ -286,7 +309,7 @@ function renderResult(r){
 
   typeLine.textContent = `${r.arche.name} • ${badgeText(r.arche)} • ${r.seedStr}`;
   scoreNum.textContent = r.score;
-  riskNum.textContent = `${r.riskPercent}% Risk Window`; // Display risk percentage
+  riskNum.textContent = `${r.riskPercent}% Risk Window`;
   doomDateEl.textContent = formatDate(r.doom);
   doomNoteEl.textContent = (r.score < 40)
     ? "Low luck window. Don’t gamble."
@@ -295,15 +318,12 @@ function renderResult(r){
   triggerEl.textContent = r.trig.k;
   triggerNoteEl.textContent = r.trig.note;
 
-  previewTextEl.textContent = r.preview;
+  previewTextEl.textContent = r.preview; // Now uses zodiac teaser
 
   // Premium lists (real content but blurred until unlock)
   avoidListEl.innerHTML = r.avoid.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
   doListEl.innerHTML = r.todo.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
   premiumText.textContent = r.premium;
-
-  // Pay link tweak could include the code in URL fragment for manual tracking (optional)
-  // payLink.href = `https://your-pay-link.example/#${encodeURIComponent(r.code)}`;
 
   // Unlock persistence
   const unlocked = localStorage.getItem("dd_unlocked") === "1";
@@ -311,7 +331,7 @@ function renderResult(r){
     setPremiumUnlocked();
   } else {
     setPremiumLocked();
-    startCountdown(); // Start countdown when locked
+    startCountdown();
   }
 }
 
@@ -425,20 +445,19 @@ function drawCard(r){
     ];
 
     ctx.fillStyle = baseColor;
-    ctx.shadowBlur = 15; // Enhanced glow
+    ctx.shadowBlur = 15;
     ctx.shadowColor = baseColor;
-    ctx.lineWidth = 1.5; // Thicker lines
+    ctx.lineWidth = 1.5;
     ctx.strokeStyle = baseColor;
 
     // Draw stars
     for (const star of stars) {
       ctx.beginPath();
-      // Vary size and opacity for a twinkling/glowing effect on static image
-      ctx.globalAlpha = 0.6 + patternRng() * 0.4; // Random opacity
+      ctx.globalAlpha = 0.6 + patternRng() * 0.4;
       ctx.arc(star.x, star.y, star.r * (0.8 + patternRng() * 0.4), 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.globalAlpha = 1; // Reset alpha
+    ctx.globalAlpha = 1;
 
     // Connect stars (simple pattern)
     ctx.beginPath();
