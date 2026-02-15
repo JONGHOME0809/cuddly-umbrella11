@@ -1,5 +1,16 @@
 // Doom Date™ — static-only viral astrology generator (no API)
 
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error("Global Error:", message, source, lineno, colno, error);
+  // Ensure the loading screen is dismissed and result screen is shown
+  const loader = document.getElementById("loader");
+  const resultWrap = document.getElementById("resultWrap");
+  if (loader) loader.classList.add("hidden");
+  if (resultWrap) resultWrap.classList.remove("hidden");
+  alert("치명적인 오류가 발생했습니다. 개발자 콘솔을 확인해주세요."); // User-friendly alert
+  return true; // Prevent default browser error handling
+};
+
 const $ = (id) => document.getElementById(id);
 
 const yy = $("yy"), mm = $("mm"), dd = $("dd");
@@ -256,15 +267,16 @@ function computeResult(y,m,d){
 
   // Zodiac-based personality teaser
   const zodiacEnglishName = getZodiacSign(m, d);
-  const zodiacInfo = zodiacTeasers[zodiacEnglishName];
+  // Ensure zodiacInfo is not undefined before accessing
+  const zodiacInfo = zodiacTeasers[zodiacEnglishName] || zodiacTeasers["Aries"]; // Default to Aries if not found
   let preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요."; // Fallback preview
   let zodiacSignDisplay = "알 수 없음 (Unknown)";
 
-  if (zodiacInfo) {
+  if (zodiacInfo) { // Check again after potential default assignment
     preview = zodiacInfo.prophecies.join("\n");
     zodiacSignDisplay = `${zodiacInfo.name_ko} (${zodiacInfo.name_en})`;
   } else {
-    // Fallback if zodiac sign is "Unknown" or not found in zodiacTeasers
+    // Should not be reached with Aries fallback, but for robustness
     preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요.";
   }
   
