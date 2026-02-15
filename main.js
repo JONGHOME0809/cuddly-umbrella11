@@ -16,6 +16,7 @@ const doomNoteEl = $("doomNote");
 const triggerEl = $("trigger");
 const triggerNoteEl = $("triggerNote");
 const previewTextEl = $("previewText");
+const zodiacPreviewEl = $("zodiacPreview"); // Added by Gemini
 
 const avoidListEl = $("avoidList");
 const doListEl = $("doList");
@@ -403,16 +404,23 @@ async function scan(){
   loader.classList.remove("hidden");
   resultWrap.classList.add("hidden");
 
-  // fake “AI scan” timing (viral feel)
-  await wait(850 + Math.random()*450);
+  try {
+    // fake “AI scan” timing (viral feel)
+    await wait(850 + Math.random()*450);
 
-  const r = computeResult(y,m,d);
-  loader.classList.add("hidden");
-  resultWrap.classList.remove("hidden");
-  renderResult(r);
+    const r = computeResult(y,m,d);
+    renderResult(r);
 
-  // auto-scroll to result
-  resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+  } catch (error) {
+    console.error("Error during scan process:", error);
+    alert("스캔 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    // Optionally, render a basic error message to the user
+  } finally {
+    loader.classList.add("hidden");
+    resultWrap.classList.remove("hidden");
+    // auto-scroll to result
+    resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+  }
 }
 
 function wait(ms){ return new Promise(res=>setTimeout(res, ms)); }
