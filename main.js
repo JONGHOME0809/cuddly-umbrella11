@@ -359,16 +359,14 @@ async function scan(){
   loader.classList.remove("hidden");
   resultWrap.classList.add("hidden");
 
-  // fake “AI scan” timing (viral feel)
-  await wait(850 + Math.random()*450);
-
-  const r = computeResult(y,m,d);
-  loader.classList.add("hidden");
-  resultWrap.classList.remove("hidden");
-  renderResult(r);
-
-  // auto-scroll to result
-  resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+  // Simplified logic: Force show results after 2 seconds
+  setTimeout(() => {
+    const r = computeResult(y,m,d); // Keep computeResult for data generation
+    loader.classList.add("hidden");
+    resultWrap.classList.remove("hidden");
+    renderResult(r);
+    resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+  }, 2000); // 2 seconds delay
 }
 
 function wait(ms){ return new Promise(res=>setTimeout(res, ms)); }
