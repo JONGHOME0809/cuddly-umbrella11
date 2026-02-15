@@ -218,9 +218,12 @@ function computeResult(y,m,d){
 
   // Zodiac-based personality teaser
   const zodiacSign = getZodiacSign(m, d);
-  const teaser = zodiacTeasers[zodiacSign];
-  const preview = `${teaser.strength}\n${teaser.weakness}\n${teaser.warning}`;
-
+  let preview = "Enter a valid date to reveal your personalized insights."; // Fallback preview
+  if (zodiacSign !== "Unknown" && zodiacTeasers[zodiacSign]) {
+    const teaser = zodiacTeasers[zodiacSign];
+    preview = `${teaser.strength}\n${teaser.weakness}\n${teaser.warning}`;
+  }
+  
   // Premium lists
   const avoid = shuffleWithRng([...avoidPool[trig.k]], rng).slice(0,3);
   const todo  = shuffleWithRng([...doPool[trig.k]], rng).slice(0,3);
