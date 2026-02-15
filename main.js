@@ -27,7 +27,7 @@ const doomNoteEl = $("doomNote");
 const triggerEl = $("trigger");
 const triggerNoteEl = $("triggerNote");
 const previewTextEl = $("previewText");
-const zodiacPreviewEl = $("zodiacPreview"); // Added by Gemini
+const zodiacPreviewEl = $("zodiacPreview"); // Defined in index.html, used here
 
 const avoidListEl = $("avoidList");
 const doListEl = $("doList");
@@ -41,7 +41,6 @@ const downloadLink = $("downloadLink");
 
 const codeInput = $("codeInput");
 const codeBtn = $("codeBtn");
-const payLink = $("payLink");
 
 // --- Seeded RNG (deterministic per birthdate) ---
 function xmur3(str){
@@ -285,8 +284,8 @@ function computeResult(y,m,d){
   }
   
   // Premium lists
-  const avoid = shuffleWithRng([...avoidPool[trig.k]], rng).slice(0,3);
-  const todo  = shuffleWithRng([...doPool[trig.k]], rng).slice(0,3);
+  const avoid = shuffleWithRng([...(avoidPool[trig.k] || [])], rng).slice(0,3); // Ensure trig.k exists or use empty array
+  const todo  = shuffleWithRng([...(doPool[trig.k] || [])], rng).slice(0,3); // Ensure trig.k exists or use empty array
 
   // Premium narrative
   const premium = buildPremiumNarrative(rng, {arche, trig, doom, score, avoid, todo});
@@ -314,28 +313,36 @@ function makeCode(y,m,d){
 
 function buildPremiumNarrative(rng, ctx){
   const lines = [];
-  const doomStr = formatDate(ctx.doom);
+  // Ensure ctx.doom is a Date object or fallback
+  const doomStr = ctx.doom instanceof Date ? formatDate(ctx.doom) : 'Unknown Date';
+  // Ensure ctx.trig.k is defined or fallback
+  const trigKLower = ctx.trig && ctx.trig.k ? ctx.trig.k.toLowerCase() : 'trigger';
 
   const dangerLine = [
-    `On ${doomStr}, your ${ctx.trig.k.toLowerCase()} trigger peaks. If you act fast, you lose leverage.`,
+    `On ${doomStr}, your ${trigKLower} trigger peaks. If you act fast, you lose leverage.`,
     `Your Doom Date (${doomStr}) isn’t “bad luck” — it’s a timing trap. Slow down and you win.`,
     `That week around ${doomStr} is a filter: it punishes shortcuts and rewards calm execution.`
   ][Math.floor(rng()*3)];
 
+  const archeName = ctx.arche && ctx.arche.name ? ctx.arche.name : 'Unknown Archetype';
+  const archeVibe = ctx.arche && ctx.arche.vibe ? ctx.arche.vibe : 'unknown vibe';
+
   const archeLine = [
-    `Archetype: ${ctx.arche.name}. Your advantage is ${ctx.arche.vibe}.`,
-    `${ctx.arche.name} energy: when you commit, reality moves. But only if you don’t rush.`,
-    `You’re ${ctx.arche.name}. You’re built for late wins, not early panic.`
+    `Archetype: ${archeName}. Your advantage is ${archeVibe}.`,
+    `${archeName} energy: when you commit, reality moves. But only if you don’t rush.`,
+    `You’re ${archeName}. You’re built for late wins, not early panic.`
   ][Math.floor(rng()*3)];
 
   lines.push(dangerLine);
   lines.push(archeLine);
   lines.push("");
   lines.push("AVOID:");
-  ctx.avoid.forEach((a,i)=> lines.push(`${i+1}) ${a}`));
+  // Ensure ctx.avoid is an array
+  (ctx.avoid || []).forEach((a,i)=> lines.push(`${i+1}) ${a}`));
   lines.push("");
   lines.push("DO:");
-  ctx.todo.forEach((t,i)=> lines.push(`${i+1}) ${t}`));
+  // Ensure ctx.todo is an array
+  (ctx.todo || []).forEach((t,i)=> lines.push(`${i+1}) ${t}`));
   lines.push("");
   lines.push("Micro-rule:");
   lines.push([
@@ -355,59 +362,93 @@ function setPremiumLocked(){
   premiumOut.classList.add("hidden");
   avoidListEl.classList.add("blurred");
   doListEl.classList.add("blurred");
-  // previewTextEl.classList.add("blurred"); // Removed blur
   countdownTimer.classList.remove("hidden");
 }
 function setPremiumUnlocked(){
   premiumOut.classList.remove("hidden");
   avoidListEl.classList.remove("blurred");
   doListEl.classList.remove("blurred");
-  // previewTextEl.classList.remove("blurred"); // Removed blur
   countdownTimer.classList.add("hidden");
   if (countdownInterval) clearInterval(countdownInterval);
 }
+
+// Start countdown if it's locked and not already running
+function startCountdown() {
+    if (!countdownTimer) return; // Ensure element exists
+    if (countdownInterval) clearInterval(countdownInterval); // Clear any existing interval
+
+    let timeLeft = 24 * 60 * 60; // 24 hours in seconds
+
+    const updateCountdown = () => {
+        const hours = String(Math.floor(timeLeft / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0');
+        const seconds = String(timeLeft % 60).padStart(2, '0');
+        countdownTimer.textContent = `남은 시간: ${hours}:${minutes}:${seconds}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            countdownTimer.textContent = "시간 종료!";
+            // Potentially re-lock content or change message
+        } else {
+            timeLeft--;
+        }
+    };
+
+    updateCountdown(); // Initial call to display immediately
+    countdownInterval = setInterval(updateCountdown, 1000); // Update every second
+}
+
 
 function renderResult(r){
   console.log("renderResult received:", r); // Debug log
   lastResult = r;
 
-  typeLine.textContent = `${r.arche.name} • ${badgeText(r.arche)} • ${r.seedStr}`;
+  // Safely access properties with fallbacks
+  typeLine.textContent = `${(r.arche && r.arche.name) || 'Unknown Archetype'} • ${badgeText(r.arche || {})} • ${r.seedStr || 'N/A'}`;
   console.log("Updating typeLine with:", typeLine.textContent); // Debug log
 
-  scoreNum.textContent = r.score;
+  scoreNum.textContent = r.score !== undefined ? r.score : 'N/A';
   console.log("Updating scoreNum with:", scoreNum.textContent); // Debug log
 
-  riskNum.textContent = `${r.riskPercent}% Risk Window`;
+  riskNum.textContent = r.riskPercent !== undefined ? `${r.riskPercent}% Risk Window` : 'N/A';
   console.log("Updating riskNum with:", riskNum.textContent); // Debug log
 
-  doomDateEl.textContent = formatDate(r.doom);
+  doomDateEl.textContent = r.doom instanceof Date ? formatDate(r.doom) : 'N/A';
   console.log("Updating doomDateEl with:", doomDateEl.textContent); // Debug log
 
-  doomNoteEl.textContent = (r.score < 40)
+  doomNoteEl.textContent = (r.score !== undefined && r.score < 40)
     ? "Low luck window. Don’t gamble."
-    : (r.score < 70) ? "Mixed signals. Precision required." : "High power—but ego traps exist.";
+    : (r.score !== undefined && r.score < 70) ? "Mixed signals. Precision required." : "High power—but ego traps exist.";
+  // Fallback for doomNoteEl if r.score is undefined
+  if (r.score === undefined) doomNoteEl.textContent = 'N/A';
   console.log("Updating doomNoteEl with:", doomNoteEl.textContent); // Debug log
 
-  triggerEl.textContent = r.trig.k;
+  triggerEl.textContent = (r.trig && r.trig.k) || 'N/A';
   console.log("Updating triggerEl with:", triggerEl.textContent); // Debug log
 
-  triggerNoteEl.textContent = r.trig.note;
+  triggerNoteEl.textContent = (r.trig && r.trig.note) || 'N/A';
   console.log("Updating triggerNoteEl with:", triggerNoteEl.textContent); // Debug log
 
-  previewTextEl.textContent = r.preview; // Now uses zodiac teaser
+  previewTextEl.textContent = r.preview || 'N/A'; // Now uses zodiac teaser
   console.log("Updating previewTextEl with:", previewTextEl.textContent); // Debug log
 
-  zodiacPreviewEl.textContent = r.zodiacSignDisplay; // Update zodiac name in preview title
-  console.log("Updating zodiacPreviewEl with:", zodiacPreviewEl.textContent); // Debug log
+  // Ensure zodiacPreviewEl exists before trying to update it
+  if (zodiacPreviewEl) {
+    zodiacPreviewEl.textContent = r.zodiacSignDisplay || 'N/A'; // Update zodiac name in preview title
+    console.log("Updating zodiacPreviewEl with:", zodiacPreviewEl.textContent); // Debug log
+  } else {
+    console.warn("zodiacPreviewEl not found in DOM.");
+  }
+
 
   // Premium lists (real content but blurred until unlock)
-  avoidListEl.innerHTML = r.avoid.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+  avoidListEl.innerHTML = (r.avoid || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
   console.log("Updating avoidListEl with:", avoidListEl.innerHTML); // Debug log
 
-  doListEl.innerHTML = r.todo.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+  doListEl.innerHTML = (r.todo || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
   console.log("Updating doListEl with:", doListEl.innerHTML); // Debug log
 
-  premiumText.textContent = r.premium;
+  premiumText.textContent = r.premium || 'N/A';
   console.log("Updating premiumText with:", premiumText.textContent); // Debug log
 
   // Unlock persistence
@@ -416,18 +457,22 @@ function renderResult(r){
     setPremiumUnlocked();
   } else {
     setPremiumLocked();
-    startCountdown();
+    startCountdown(); // Ensure startCountdown is called when locked
   }
   console.log("Unlock state updated."); // Debug log
 }
 
 function badgeText(arche){
+  // Ensure arche is not null/undefined
+  if(!arche || typeof arche.name === 'undefined') return "STANDARD";
   if(arche.name.includes("MYTHIC")) return "MYTHIC BADGE ✦";
   if(arche.name.includes("VOID")) return "VOID BADGE ⛧";
   return "STANDARD";
 }
 
 function escapeHtml(str){
+  // Ensure str is a string
+  if (typeof str !== 'string') return String(str);
   return str.replace(/[&<>"']/g, (m)=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
@@ -476,14 +521,20 @@ scanBtn.addEventListener("click", scan);
 // Copy share text
 copyBtn.addEventListener("click", async ()=>{
   if(!lastResult){ alert("먼저 스캔을 실행하세요."); return; }
+  // Ensure all properties are available before using
+  const doomFormatted = lastResult.doom instanceof Date ? formatDate(lastResult.doom) : 'N/A';
+  const archeName = (lastResult.arche && lastResult.arche.name) || 'N/A';
+  const score = lastResult.score !== undefined ? lastResult.score : 'N/A';
+  const preview = lastResult.preview || 'N/A';
+  
   const msg =
-`방금 저의 둠 데이트를 찾았습니다: ${formatDate(lastResult.doom)} 😬
-타입: ${lastResult.arche.name} (${badgeText(lastResult.arche)})
-포춘 점수: ${lastResult.score}/100
+`방금 저의 둠 데이트를 찾았습니다: ${doomFormatted} 😬
+타입: ${archeName} (${badgeText(lastResult.arche || {})})
+포춘 점수: ${score}/100
 
-${lastResult.preview}
+${preview}
 
-당신의 둠 데이트를 찾아보세요: ${location.href}`;
+당신의 둠 데이트를 찾아보세요: ${stripQuery(location.href)}`;
   try{
     await navigator.clipboard.writeText(msg);
     alert("복사되었습니다. 스크린샷과 함께 게시하세요.");
@@ -499,6 +550,7 @@ cardBtn.addEventListener("click", ()=>{
 });
 
 function drawCard(r){
+  console.log("drawCard received:", r); // Debug log
   const ctx = canvas.getContext("2d");
   canvas.classList.remove("hidden");
   downloadLink.classList.remove("hidden");
@@ -595,12 +647,12 @@ function drawCard(r){
 
   ctx.fillStyle = "#e9ecff";
   ctx.font = "900 120px ui-sans-serif, system-ui";
-  ctx.fillText(String(r.score), 120, 455);
+  ctx.fillText(String(r.score !== undefined ? r.score : 'N/A'), 120, 455); // Safely access r.score
 
   // doom date
   ctx.fillStyle = "#ff4d6d";
   ctx.font = "900 58px ui-sans-serif, system-ui";
-  ctx.fillText(formatDate(r.doom), 120, 590);
+  ctx.fillText(r.doom instanceof Date ? formatDate(r.doom) : 'N/A', 120, 590); // Safely access r.doom
 
   // archetype
   ctx.fillStyle = "rgba(233,236,255,0.65)";
@@ -609,7 +661,7 @@ function drawCard(r){
 
   ctx.fillStyle = "#e9ecff";
   ctx.font = "900 46px ui-sans-serif, system-ui";
-  wrapText(ctx, `${r.arche.name}`, 120, 720, 820, 52);
+  wrapText(ctx, `${(r.arche && r.arche.name) || 'N/A'}`, 120, 720, 820, 52); // Safely access r.arche.name
 
   // trigger
   ctx.fillStyle = "rgba(233,236,255,0.65)";
@@ -618,20 +670,20 @@ function drawCard(r){
 
   ctx.fillStyle = "#00e5ff";
   ctx.font = "900 44px ui-sans-serif, system-ui";
-  ctx.fillText(r.trig.k.toUpperCase(), 120, 895);
+  ctx.fillText((r.trig && r.trig.k && r.trig.k.toUpperCase()) || 'N/A', 120, 895); // Safely access r.trig.k
 
   ctx.fillStyle = "rgba(233,236,255,0.78)";
   ctx.font = "600 26px ui-sans-serif, system-ui";
-  wrapText(ctx, r.trig.note, 120, 940, 820, 36);
+  wrapText(ctx, (r.trig && r.trig.note) || 'N/A', 120, 940, 820, 36); // Safely access r.trig.note
 
   // Free Preview Teaser on Card
   ctx.fillStyle = "rgba(233,236,255,0.65)";
   ctx.font = "800 22px ui-sans-serif, system-ui";
-  ctx.fillText(`무료 미리보기 — ${r.zodiacSignDisplay}`, 120, 1000); // Title for teaser
+  ctx.fillText(`무료 미리보기 — ${r.zodiacSignDisplay || 'N/A'}`, 120, 1000); // Safely access r.zodiacSignDisplay
 
   ctx.fillStyle = "rgba(233,236,255,0.78)";
   ctx.font = "600 26px ui-sans-serif, system-ui";
-  wrapText(ctx, r.preview, 120, 1035, 820, 36); // Prophecy lines
+  wrapText(ctx, r.preview || 'N/A', 120, 1035, 820, 36); // Safely access r.preview
 
   // footer watermark
   ctx.fillStyle = "rgba(233,236,255,0.55)";
@@ -670,9 +722,10 @@ function roundRect(ctx,x,y,w,h,r,fill,stroke){
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight){
-  const words = text.split(" ");
-  let line = "";
-  let currentY = y; // Use a local variable for Y position
+  // Ensure text is a string
+  if (typeof text !== 'string') text = String(text);
+
+  let currentY = y;
   const lines = text.split('\n'); // Handle multiline input
 
   for(const l of lines) {
@@ -708,7 +761,7 @@ codeBtn.addEventListener("click", ()=>{
 
   // Valid if matches deterministic code OR a master code you can rotate
   const master = "DD-2026";
-  if(input === lastResult.code || input === master){
+  if(input === (lastResult && lastResult.code) || input === master){ // Safely access lastResult.code
     localStorage.setItem("dd_unlocked","1");
     setPremiumUnlocked();
     alert("잠금 해제되었습니다.");
