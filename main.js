@@ -267,16 +267,20 @@ function computeResult(y,m,d){
 
   // Zodiac-based personality teaser
   const zodiacEnglishName = getZodiacSign(m, d);
-  // Ensure zodiacInfo is not undefined before accessing
+  console.log("getZodiacSign returned:", zodiacEnglishName, "for month:", m, "day:", d); // Debug log
+
   const zodiacInfo = zodiacTeasers[zodiacEnglishName] || zodiacTeasers["Aries"]; // Default to Aries if not found
+  console.log("zodiacInfo after fallback:", zodiacInfo); // Debug log
+
   let preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요."; // Fallback preview
   let zodiacSignDisplay = "알 수 없음 (Unknown)";
 
-  if (zodiacInfo) { // Check again after potential default assignment
+  if (zodiacInfo && zodiacInfo.prophecies) { // Ensure prophecies exist
     preview = zodiacInfo.prophecies.join("\n");
     zodiacSignDisplay = `${zodiacInfo.name_ko} (${zodiacInfo.name_en})`;
   } else {
-    // Should not be reached with Aries fallback, but for robustness
+    // Fallback if zodiac sign is "Unknown" or not found in zodiacTeasers or prophecies missing
+    console.warn("Invalid zodiacInfo or missing prophecies. Using generic fallback."); // Debug warn
     preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요.";
   }
   
@@ -364,26 +368,47 @@ function setPremiumUnlocked(){
 }
 
 function renderResult(r){
+  console.log("renderResult received:", r); // Debug log
   lastResult = r;
 
   typeLine.textContent = `${r.arche.name} • ${badgeText(r.arche)} • ${r.seedStr}`;
+  console.log("Updating typeLine with:", typeLine.textContent); // Debug log
+
   scoreNum.textContent = r.score;
+  console.log("Updating scoreNum with:", scoreNum.textContent); // Debug log
+
   riskNum.textContent = `${r.riskPercent}% Risk Window`;
+  console.log("Updating riskNum with:", riskNum.textContent); // Debug log
+
   doomDateEl.textContent = formatDate(r.doom);
+  console.log("Updating doomDateEl with:", doomDateEl.textContent); // Debug log
+
   doomNoteEl.textContent = (r.score < 40)
     ? "Low luck window. Don’t gamble."
     : (r.score < 70) ? "Mixed signals. Precision required." : "High power—but ego traps exist.";
+  console.log("Updating doomNoteEl with:", doomNoteEl.textContent); // Debug log
 
   triggerEl.textContent = r.trig.k;
+  console.log("Updating triggerEl with:", triggerEl.textContent); // Debug log
+
   triggerNoteEl.textContent = r.trig.note;
+  console.log("Updating triggerNoteEl with:", triggerNoteEl.textContent); // Debug log
 
   previewTextEl.textContent = r.preview; // Now uses zodiac teaser
+  console.log("Updating previewTextEl with:", previewTextEl.textContent); // Debug log
+
   zodiacPreviewEl.textContent = r.zodiacSignDisplay; // Update zodiac name in preview title
+  console.log("Updating zodiacPreviewEl with:", zodiacPreviewEl.textContent); // Debug log
 
   // Premium lists (real content but blurred until unlock)
   avoidListEl.innerHTML = r.avoid.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+  console.log("Updating avoidListEl with:", avoidListEl.innerHTML); // Debug log
+
   doListEl.innerHTML = r.todo.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+  console.log("Updating doListEl with:", doListEl.innerHTML); // Debug log
+
   premiumText.textContent = r.premium;
+  console.log("Updating premiumText with:", premiumText.textContent); // Debug log
 
   // Unlock persistence
   const unlocked = localStorage.getItem("dd_unlocked") === "1";
@@ -393,6 +418,7 @@ function renderResult(r){
     setPremiumLocked();
     startCountdown();
   }
+  console.log("Unlock state updated."); // Debug log
 }
 
 function badgeText(arche){
@@ -421,11 +447,12 @@ async function scan(){
     await wait(850 + Math.random()*450);
 
     const r = computeResult(y,m,d);
+    console.log("computeResult returned:", r); // Debug log
     renderResult(r);
 
   } catch (error) {
-    console.error("Error during scan process:", error);
-    alert("스캔 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    console.error("Error during scan process:", error); // Use console.error instead of alert
+    // alert("스캔 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."); // Removed alert
     // Optionally, render a basic error message to the user
   } finally {
     loader.classList.add("hidden");
