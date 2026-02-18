@@ -18,17 +18,7 @@ const scanBtn = $("scanBtn"), randomBtn = $("randomBtn");
 const loader = $("loader");
 const resultWrap = $("resultWrap");
 
-const typeLine = $("typeLine");
-const scoreNum = $("scoreNum");
-const riskNum = $("riskNum");
-const doomDateEl = $("doomDate");
 const countdownTimer = $("countdownTimer");
-const doomNoteEl = $("doomNote");
-const triggerEl = $("trigger");
-const triggerNoteEl = $("triggerNote");
-const previewTextEl = $("previewText");
-const zodiacPreviewEl = $("zodiacPreview"); // Defined in index.html, used here
-
 const avoidListEl = $("avoidList");
 const doListEl = $("doList");
 const premiumOut = $("premiumOut");
@@ -266,21 +256,17 @@ function computeResult(y,m,d){
 
   // Zodiac-based personality teaser
   const zodiacEnglishName = getZodiacSign(m, d);
-  console.log("getZodiacSign returned:", zodiacEnglishName, "for month:", m, "day:", d); // Debug log
-
   const zodiacInfo = zodiacTeasers[zodiacEnglishName] || zodiacTeasers["Aries"]; // Default to Aries if not found
-  console.log("zodiacInfo after fallback:", zodiacInfo); // Debug log
 
-  let preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요."; // Fallback preview
+  let previewText = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요."; // Fallback preview
   let zodiacSignDisplay = "알 수 없음 (Unknown)";
 
   if (zodiacInfo && zodiacInfo.prophecies) { // Ensure prophecies exist
-    preview = zodiacInfo.prophecies.join("\n");
+    previewText = zodiacInfo.prophecies.join("\n");
     zodiacSignDisplay = `${zodiacInfo.name_ko} (${zodiacInfo.name_en})`;
   } else {
     // Fallback if zodiac sign is "Unknown" or not found in zodiacTeasers or prophecies missing
-    console.warn("Invalid zodiacInfo or missing prophecies. Using generic fallback."); // Debug warn
-    preview = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요.";
+    previewText = "유효한 날짜를 입력하여 개인화된 통찰력을 확인하세요.";
   }
   
   // Premium lists
@@ -293,7 +279,7 @@ function computeResult(y,m,d){
   // Unlock code (deterministic but not obvious)
   const code = makeCode(y,m,d);
 
-  return {seedStr, arche, trig, doom, score, riskPercent, preview, avoid, todo, premium, code, zodiacSignDisplay};
+  return {seedStr, arche, trig, doom, score, riskPercent, preview: previewText, avoid, todo, premium, code, zodiacSignDisplay};
 }
 
 function shuffleWithRng(arr, rng){
@@ -398,69 +384,81 @@ function startCountdown() {
     countdownInterval = setInterval(updateCountdown, 1000); // Update every second
 }
 
+function renderResult(r) {
+    lastResult = r;
 
-function renderResult(r){
-  console.log("renderResult received:", r); // Debug log
-  lastResult = r;
+    // Add console logs as requested
+    console.log("Score:", r.score);
+    console.log("Zodiac:", r.zodiacSignDisplay);
+    console.log("Preview:", r.preview);
 
-  // Safely access properties with fallbacks
-  typeLine.textContent = `${(r.arche && r.arche.name) || 'Unknown Archetype'} • ${badgeText(r.arche || {})} • ${r.seedStr || 'N/A'}`;
-  console.log("Updating typeLine with:", typeLine.textContent); // Debug log
+    // Get elements by their correct ID from the HTML
+    const fortuneScoreEl = document.getElementById("scoreNum");
+    const riskPeriodEl = document.getElementById("riskNum");
+    const doomDateEl = document.getElementById("doomDate");
+    const mainTriggerEl = document.getElementById("trigger");
+    const freePreviewTextEl = document.getElementById("previewText");
+    const zodiacPreviewEl = document.getElementById("zodiacPreview");
 
-  scoreNum.textContent = r.score !== undefined ? r.score : 'N/A';
-  console.log("Updating scoreNum with:", scoreNum.textContent); // Debug log
+    // Other elements needed for rendering the result card
+    const typeLineEl = document.getElementById("typeLine");
+    const doomNoteEl = document.getElementById("doomNote");
+    const triggerNoteEl = document.getElementById("triggerNote");
 
-  riskNum.textContent = r.riskPercent !== undefined ? `${r.riskPercent}% Risk Window` : 'N/A';
-  console.log("Updating riskNum with:", riskNum.textContent); // Debug log
+    // Update elements, checking for null to prevent errors
+    if (fortuneScoreEl) {
+        fortuneScoreEl.textContent = r.score ?? "N/A";
+    }
+    if (riskPeriodEl) {
+        riskPeriodEl.textContent = r.riskPercent !== undefined ? `${r.riskPercent}% Risk Window` : "N/A";
+    }
+    if (doomDateEl) {
+        doomDateEl.textContent = r.doom instanceof Date ? formatDate(r.doom) : "N/A";
+    }
+    if (mainTriggerEl) {
+        mainTriggerEl.textContent = (r.trig && r.trig.k) ?? "N/A";
+    }
+    if (freePreviewTextEl) {
+        freePreviewTextEl.innerHTML = r.preview ?? "";
+    }
+    if (zodiacPreviewEl) {
+        zodiacPreviewEl.textContent = r.zodiacSignDisplay ?? "N/A";
+    }
 
-  doomDateEl.textContent = r.doom instanceof Date ? formatDate(r.doom) : 'N/A';
-  console.log("Updating doomDateEl with:", doomDateEl.textContent); // Debug log
+    if (typeLineEl) {
+        typeLineEl.textContent = `${(r.arche && r.arche.name) || 'Unknown Archetype'} • ${badgeText(r.arche || {})} • ${r.seedStr || 'N/A'}`;
+    }
+    if (doomNoteEl) {
+        doomNoteEl.textContent = (r.score < 40) ? "Low luck window. Don’t gamble."
+            : (r.score < 70) ? "Mixed signals. Precision required."
+            : "High power—but ego traps exist.";
+        if (r.score === undefined) doomNoteEl.textContent = 'N/A';
+    }
+    if (triggerNoteEl) {
+        triggerNoteEl.textContent = (r.trig && r.trig.note) || 'N/A';
+    }
 
-  doomNoteEl.textContent = (r.score !== undefined && r.score < 40)
-    ? "Low luck window. Don’t gamble."
-    : (r.score !== undefined && r.score < 70) ? "Mixed signals. Precision required." : "High power—but ego traps exist.";
-  // Fallback for doomNoteEl if r.score is undefined
-  if (r.score === undefined) doomNoteEl.textContent = 'N/A';
-  console.log("Updating doomNoteEl with:", doomNoteEl.textContent); // Debug log
+    // Premium lists (real content but blurred until unlock)
+    if (avoidListEl) {
+      avoidListEl.innerHTML = (r.avoid || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    }
+    if (doListEl) {
+      doListEl.innerHTML = (r.todo || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    }
+    if (premiumText) {
+      premiumText.textContent = r.premium ?? 'N/A';
+    }
 
-  triggerEl.textContent = (r.trig && r.trig.k) || 'N/A';
-  console.log("Updating triggerEl with:", triggerEl.textContent); // Debug log
-
-  triggerNoteEl.textContent = (r.trig && r.trig.note) || 'N/A';
-  console.log("Updating triggerNoteEl with:", triggerNoteEl.textContent); // Debug log
-
-  previewTextEl.textContent = r.preview || 'N/A'; // Now uses zodiac teaser
-  console.log("Updating previewTextEl with:", previewTextEl.textContent); // Debug log
-
-  // Ensure zodiacPreviewEl exists before trying to update it
-  if (zodiacPreviewEl) {
-    zodiacPreviewEl.textContent = r.zodiacSignDisplay || 'N/A'; // Update zodiac name in preview title
-    console.log("Updating zodiacPreviewEl with:", zodiacPreviewEl.textContent); // Debug log
-  } else {
-    console.warn("zodiacPreviewEl not found in DOM.");
-  }
-
-
-  // Premium lists (real content but blurred until unlock)
-  avoidListEl.innerHTML = (r.avoid || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
-  console.log("Updating avoidListEl with:", avoidListEl.innerHTML); // Debug log
-
-  doListEl.innerHTML = (r.todo || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
-  console.log("Updating doListEl with:", doListEl.innerHTML); // Debug log
-
-  premiumText.textContent = r.premium || 'N/A';
-  console.log("Updating premiumText with:", premiumText.textContent); // Debug log
-
-  // Unlock persistence
-  const unlocked = localStorage.getItem("dd_unlocked") === "1";
-  if(unlocked){
-    setPremiumUnlocked();
-  } else {
-    setPremiumLocked();
-    startCountdown(); // Ensure startCountdown is called when locked
-  }
-  console.log("Unlock state updated."); // Debug log
+    // Unlock persistence
+    const unlocked = localStorage.getItem("dd_unlocked") === "1";
+    if (unlocked) {
+        setPremiumUnlocked();
+    } else {
+        setPremiumLocked();
+        startCountdown();
+    }
 }
+
 
 function badgeText(arche){
   // Ensure arche is not null/undefined
@@ -492,13 +490,10 @@ async function scan(){
     await wait(850 + Math.random()*450);
 
     const r = computeResult(y,m,d);
-    console.log("computeResult returned:", r); // Debug log
     renderResult(r);
 
   } catch (error) {
-    console.error("Error during scan process:", error); // Use console.error instead of alert
-    // alert("스캔 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."); // Removed alert
-    // Optionally, render a basic error message to the user
+    console.error("Error during scan process:", error);
   } finally {
     loader.classList.add("hidden");
     resultWrap.classList.remove("hidden");
@@ -779,7 +774,7 @@ if(localStorage.getItem("dd_unlocked")==="1"){
 }
 
 // Initial scan on page load if parameters are present (e.g. from paid redirect)
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('paid') === 'true') {
     localStorage.setItem("dd_unlocked", "1");
@@ -789,5 +784,70 @@ window.addEventListener('load', () => {
   }
   if(localStorage.getItem("dd_unlocked")==="1"){
     setPremiumUnlocked();
+  } else {
+    setPremiumLocked();
   }
+
+  randomBtn.addEventListener("click", ()=>{
+    const y = 1980 + Math.floor(Math.random()*35);
+    const m = 1 + Math.floor(Math.random()*12);
+    const d = 1 + Math.floor(Math.random()*28);
+    yy.value = y; mm.value = m; dd.value = d;
+    scan();
+  });
+  scanBtn.addEventListener("click", scan);
+
+  // Copy share text
+  copyBtn.addEventListener("click", async ()=>{
+    if(!lastResult){ alert("먼저 스캔을 실행하세요."); return; }
+    // Ensure all properties are available before using
+    const doomFormatted = lastResult.doom instanceof Date ? formatDate(lastResult.doom) : 'N/A';
+    const archeName = (lastResult.arche && lastResult.arche.name) || 'N/A';
+    const score = lastResult.score !== undefined ? lastResult.score : 'N/A';
+    const preview = lastResult.preview || 'N/A';
+    
+    const msg =
+  \`방금 저의 둠 데이트를 찾았습니다: \${doomFormatted} 😬
+타입: \${archeName} (\${badgeText(lastResult.arche || {})})
+포춘 점수: \${score}/100
+
+\${preview}
+
+당신의 둠 데이트를 찾아보세요: \${stripQuery(location.href)}\`;
+    try{
+      await navigator.clipboard.writeText(msg);
+      alert("복사되었습니다. 스크린샷과 함께 게시하세요.");
+    }catch{
+      prompt("다음을 복사하세요:", msg);
+    }
+  });
+
+  // Share card generation
+  cardBtn.addEventListener("click", ()=>{
+    if(!lastResult){ alert("먼저 스캔을 실행하세요."); return; }
+    drawCard(lastResult);
+  });
+
+  // Unlock handling
+  codeBtn.addEventListener("click", ()=>{
+    if(!lastResult){
+      alert("먼저 스캔을 실행하세요.");
+      return;
+    }
+    const input = (codeInput.value || "").trim().toUpperCase();
+    if(!input){
+      alert("코드를 입력하세요.");
+      return;
+    }
+
+    // Valid if matches deterministic code OR a master code you can rotate
+    const master = "DD-2026";
+    if(input === (lastResult && lastResult.code) || input === master){ // Safely access lastResult.code
+      localStorage.setItem("dd_unlocked","1");
+      setPremiumUnlocked();
+      alert("잠금 해제되었습니다.");
+    } else {
+      alert("잘못된 코드입니다.");
+    }
+  });
 });
