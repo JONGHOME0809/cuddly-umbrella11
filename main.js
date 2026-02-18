@@ -117,7 +117,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  let currentResult = null;
+
   function displayResult(res) {
+    currentResult = res;
     if (scoreNum) scoreNum.textContent = res.score;
     if (riskNum) riskNum.textContent = res.risk + "%";
     if (doomDate) doomDate.textContent = res.doomDate;
@@ -218,6 +221,54 @@ document.addEventListener("DOMContentLoaded", () => {
     copyBtn.addEventListener("click", () => {
       const text = `내 둠 데이트: ${doomDate.textContent} | 포춘 점수: ${scoreNum.textContent}\n당신도 확인해보세요: ${window.location.href}`;
       navigator.clipboard.writeText(text).then(() => alert("복사되었습니다!"));
+    });
+  }
+
+  const cardBtn = document.getElementById("cardBtn");
+  if (cardBtn) {
+    cardBtn.addEventListener("click", async () => {
+      if (!currentResult) {
+        alert("먼저 스캔을 진행해주세요.");
+        return;
+      }
+
+      // Populate hidden card
+      document.getElementById("card-zodiac").textContent = currentResult.sign;
+      document.getElementById("card-score").textContent = currentResult.score;
+      document.getElementById("card-risk").textContent = currentResult.risk + "%";
+      document.getElementById("card-date").textContent = "Doom Date: " + currentResult.doomDate;
+      document.getElementById("card-phrase").textContent = `"${currentResult.archetype}로서 당신의 운명을 조심하십시오."`;
+
+      try {
+        const previewEl = document.getElementById("share-card-preview");
+        const canvas = await html2canvas(previewEl, {
+          backgroundColor: "#07070b",
+          scale: 2
+        });
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], "doom-date.png", { type: "image/png" });
+
+        console.log("Share card generated");
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "My Doom Date",
+            text: `내 둠 데이트 결과: ${currentResult.doomDate}. 당신의 운명은?`
+          });
+        } else {
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = "my-doom-date.png";
+          link.click();
+          alert("카드가 생성되었습니다. 이미지를 저장해 공유하세요!");
+        }
+      } catch (err) {
+        console.error("Card generation failed:", err);
+        alert("카드 생성에 실패했습니다.");
+      }
     });
   }
 

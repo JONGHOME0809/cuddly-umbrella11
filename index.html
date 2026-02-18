@@ -192,6 +192,24 @@
       <div class="tiny">Built for viral short-form traffic. Static-only MVP.</div>
     </footer>
   </main>22
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./main.js"></script>
+  <div id="share-card-preview" style="position: absolute; left: -9999px; top: -9999px; width: 400px; padding: 40px; background: #07070b; color: #fff; font-family: sans-serif; border: 1px solid #333; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center;">
+    <div style="font-size: 0.8rem; color: #ff4d6d; font-weight: bold; letter-spacing: 2px;">DOOM DATE™</div>
+    <div id="card-zodiac" style="font-size: 1.5rem; font-weight: bold;"></div>
+    <div style="display: flex; gap: 30px; margin: 10px 0;">
+      <div>
+        <div style="font-size: 0.7rem; color: #888;">Fortune Score</div>
+        <div id="card-score" style="font-size: 2.5rem; font-weight: 900; color: #e9ecff;"></div>
+      </div>
+      <div>
+        <div style="font-size: 0.7rem; color: #888;">Risk Level</div>
+        <div id="card-risk" style="font-size: 2.5rem; font-weight: 900; color: #ff4d6d;"></div>
+      </div>
+    </div>
+    <div id="card-date" style="font-size: 1.2rem; font-weight: bold; color: #00e5ff;"></div>
+    <div id="card-phrase" style="font-size: 1rem; color: #ccc; line-height: 1.4; padding: 0 10px;"></div>
+    <div style="font-size: 0.7rem; color: #555; margin-top: 10px;">Check yours at: doomdate.com</div>
+  </div>
 </body>
 </html>
