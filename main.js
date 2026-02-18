@@ -359,7 +359,7 @@ function makeCode(y,m,d){
   return `DD-${String(k).padStart(4,"0")}`;
 }
 
-function buildPremiumNarrative(rng, ctx){
+function buildPremiumNarrative(rng, ctx, isLocked = false){
   const lines = [];
   // Ensure ctx.doom is a Date object or fallback
   const doomStr = ctx.doom instanceof Date ? formatDate(ctx.doom) : 'Unknown Date';
@@ -381,23 +381,45 @@ function buildPremiumNarrative(rng, ctx){
     `You’re ${archeName}. You’re built for late wins, not early panic.`
   ][Math.floor(rng()*3)];
 
-  lines.push(dangerLine);
-  lines.push(archeLine);
-  lines.push("");
-  lines.push("AVOID:");
-  // Ensure ctx.avoid is an array
-  (ctx.avoid || []).forEach((a,i)=> lines.push(`${i+1}) ${a}`));
-  lines.push("");
-  lines.push("DO:");
-  // Ensure ctx.todo is an array
-  (ctx.todo || []).forEach((t,i)=> lines.push(`${i+1}) ${t}`));
-  lines.push("");
-  lines.push("Micro-rule:");
-  lines.push([
-    "If you feel urgency, wait 2 hours. Urgency is the trap.",
-    "If it feels like ‘now or never’, it’s usually ‘never’.",
-    "Your win condition: calm + receipts + one decisive move."
-  ][Math.floor(rng()*3)]);
+  if (isLocked) {
+    // Teaser for locked content
+    lines.push(dangerLine);
+    lines.push(archeLine);
+    lines.push("");
+    lines.push("AVOID:");
+    // Show only first item of avoid list + suspenseful message
+    (ctx.avoid && ctx.avoid.length > 0 ? [ctx.avoid[0]] : ["알 수 없는 위험"])
+      .forEach((a,i)=> lines.push(`${i+1}) ${a}`));
+    lines.push("   ... 더 많은 피해야 할 것들 (프리미엄 잠금)");
+    lines.push("");
+    lines.push("DO:");
+    // Show only first item of do list + suspenseful message
+    (ctx.todo && ctx.todo.length > 0 ? [ctx.todo[0]] : ["알 수 없는 기회"])
+      .forEach((t,i)=> lines.push(`${i+1}) ${t}`));
+    lines.push("   ... 더 많은 해야 할 것들 (프리미엄 잠금)");
+    lines.push("");
+    lines.push("🚨 이 문장은 당신의 3개월 후를 설명합니다 🚨"); // Strong hook
+    lines.push("   ... 내 운명의 완전한 해제를 원한다면 (프리미엄 잠금)");
+  } else {
+    // Full narrative for unlocked content
+    lines.push(dangerLine);
+    lines.push(archeLine);
+    lines.push("");
+    lines.push("AVOID:");
+    // Ensure ctx.avoid is an array
+    (ctx.avoid || []).forEach((a,i)=> lines.push(`${i+1}) ${a}`));
+    lines.push("");
+    lines.push("DO:");
+    // Ensure ctx.todo is an array
+    (ctx.todo || []).forEach((t,i)=> lines.push(`${i+1}) ${t}`));
+    lines.push("");
+    lines.push("Micro-rule:");
+    lines.push([
+      "If you feel urgency, wait 2 hours. Urgency is the trap.",
+      "If it feels like ‘now or never’, it’s usually ‘never’.",
+      "Your win condition: calm + receipts + one decisive move."
+    ][Math.floor(rng()*3)]);
+  }
 
   return lines.join("\n");
 }
@@ -405,12 +427,22 @@ function buildPremiumNarrative(rng, ctx){
 // --- UI ---
 let lastResult = null;
 let countdownInterval;
+const unlockButton = $("unlockButton"); // Get the unlock button element
 
 function setPremiumLocked(){
   premiumOut.classList.add("hidden");
   avoidListEl.classList.add("blurred");
   doListEl.classList.add("blurred");
   countdownTimer.classList.remove("hidden");
+  if (unlockButton) {
+    unlockButton.textContent = "내 운명 완전 해제하기 - $9.99"; // Stronger button text
+  }
+  // When locked, premiumText should show the teaser
+  if (lastResult && premiumText) {
+    // Regenerate narrative as teaser
+    const rng = seededRand(lastResult.seedStr); // Need to re-seed rng for consistent output
+    premiumText.textContent = buildPremiumNarrative(rng, lastResult, true) || 'N/A';
+  }
 }
 function setPremiumUnlocked(){
   premiumOut.classList.remove("hidden");
@@ -418,6 +450,15 @@ function setPremiumUnlocked(){
   doListEl.classList.remove("blurred");
   countdownTimer.classList.add("hidden");
   if (countdownInterval) clearInterval(countdownInterval);
+  if (unlockButton) {
+    unlockButton.textContent = "프리미엄 해제됨!"; // Indicate unlocked state
+  }
+  // When unlocked, premiumText should show the full narrative
+  if (lastResult && premiumText) {
+    // Regenerate narrative as full version
+    const rng = seededRand(lastResult.seedStr); // Need to re-seed rng for consistent output
+    premiumText.textContent = buildPremiumNarrative(rng, lastResult, false) || 'N/A';
+  }
 }
 
 // Start countdown if it's locked and not already running
@@ -450,12 +491,14 @@ function renderResult(r) {
     lastResult = r;
 
     // Add console logs as requested
+    console.log("Full Result Object:", r); // More comprehensive log for the whole object
     console.log("Score:", r.score);
     console.log("Zodiac:", r.zodiacSignDisplay);
     console.log("Preview:", r.preview);
 
     // Get elements by their correct ID from the HTML
     const fortuneScoreEl = document.getElementById("scoreNum");
+    const scoreDescriptionEl = document.getElementById("scoreDescription");
     const riskPeriodEl = document.getElementById("riskNum");
     const doomDateEl = document.getElementById("doomDate");
     const mainTriggerEl = document.getElementById("trigger");
@@ -467,13 +510,36 @@ function renderResult(r) {
     const doomNoteEl = document.getElementById("doomNote");
     const triggerNoteEl = document.getElementById("triggerNote");
 
-    // Update elements, checking for null to prevent errors
+    // --- Problem 2: Result screen enhancements ---
+
+    // 1. Result Title: More powerful and personalized
+    if (typeLineEl) {
+        const archetypePhrase = getArchetypePhrase(r.arche, r.score);
+        typeLineEl.textContent = `${archetypePhrase} • ${badgeText(r.arche || {})} • ${r.seedStr || 'N/A'}`;
+    }
+
+    // 2. Fortune Score: Emotional evocative description
     if (fortuneScoreEl) {
         fortuneScoreEl.textContent = r.score ?? "N/A";
     }
-    if (riskPeriodEl) {
-        riskPeriodEl.textContent = r.riskPercent !== undefined ? `${r.riskPercent}% Risk Window` : "N/A";
+    if (scoreDescriptionEl) {
+        scoreDescriptionEl.textContent = getFortuneScoreDescription(r.score);
     }
+
+    // 3. Danger Period Emphasis: Add visual warning (dynamic class)
+    if (riskPeriodEl) {
+        riskPeriodEl.textContent = r.riskPercent !== undefined ? `${r.riskPercent}% 위험 구간` : "N/A";
+        riskPeriodEl.classList.remove('low-risk', 'medium-risk', 'high-risk'); // Clear previous
+        if (r.riskPercent < 30) {
+            riskPeriodEl.classList.add('low-risk');
+        } else if (r.riskPercent < 70) {
+            riskPeriodEl.classList.add('medium-risk');
+        } else {
+            riskPeriodEl.classList.add('high-risk');
+        }
+    }
+
+    // Update other elements as before
     if (doomDateEl) {
         doomDateEl.textContent = r.doom instanceof Date ? formatDate(r.doom) : "N/A";
     }
@@ -487,13 +553,10 @@ function renderResult(r) {
         zodiacPreviewEl.textContent = r.zodiacSignDisplay ?? "N/A";
     }
 
-    if (typeLineEl) {
-        typeLineEl.textContent = `${(r.arche && r.arche.name) || 'Unknown Archetype'} • ${badgeText(r.arche || {})} • ${r.seedStr || 'N/A'}`;
-    }
     if (doomNoteEl) {
-        doomNoteEl.textContent = (r.score < 40) ? "Low luck window. Don’t gamble."
-            : (r.score < 70) ? "Mixed signals. Precision required."
-            : "High power—but ego traps exist.";
+        doomNoteEl.textContent = (r.score < 40) ? "낮은 운의 창. 도박하지 마세요."
+            : (r.score < 70) ? "혼합된 신호. 정밀함이 필요합니다."
+            : "강력한 힘—하지만 자만의 덫을 조심하세요.";
         if (r.score === undefined) doomNoteEl.textContent = 'N/A';
     }
     if (triggerNoteEl) {
@@ -521,6 +584,26 @@ function renderResult(r) {
     }
 }
 
+// Helper function for Problem 2 - Result Title
+function getArchetypePhrase(arche, score) {
+    const archeName = (arche && arche.name) || 'Unknown Archetype';
+    if (score > 90) return `운명을 지배하는 ${archeName}`;
+    if (score > 70) return `숨겨진 잠재력의 ${archeName}`;
+    if (score > 50) return `균형을 찾는 ${archeName}`;
+    if (score > 30) return `도전을 헤쳐나가는 ${archeName}`;
+    return `각성을 기다리는 ${archeName}`;
+}
+
+// Helper function for Problem 2 - Fortune Score Description
+function getFortuneScoreDescription(score) {
+    if (score === undefined) return "당신의 운명을 스캔하는 중입니다...";
+    if (score > 90) return `이번 달, 당신은 평범하지 않습니다. 우주가 당신의 편에 서 있습니다.`;
+    if (score > 70) return `당신의 에너지가 최고조에 달하고 있습니다. 놓치지 마세요!`;
+    if (score > 50) return `변화의 바람이 불고 있습니다. 현명한 선택이 필요해요.`;
+    if (score > 30) return `조심스러운 한 달이 될 수 있습니다. 신중하게 움직이세요.`;
+    return `지금은 숨을 고르고 다음 기회를 준비할 때입니다.`;
+}
+
 
 function badgeText(arche){
   // Ensure arche is not null/undefined
@@ -539,28 +622,37 @@ function escapeHtml(str){
 }
 
 async function scan(){
+  console.log("Scan initiated.");
   const y = Number(yy.value), m = Number(mm.value), d = Number(dd.value);
   if(!validDate(y,m,d)){
     alert("유효한 생년월일(YYYY / MM / DD)을 입력하세요.");
+    console.log("Scan aborted: Invalid date.");
     return;
   }
+  console.log("Date validated. Showing loader, hiding result wrap.");
   loader.classList.remove("hidden");
   resultWrap.classList.add("hidden");
 
   try {
     // fake “AI scan” timing (viral feel)
     await wait(850 + Math.random()*450);
+    console.log("Simulated scan time elapsed. Computing result...");
 
     const r = computeResult(y,m,d);
+    console.log("Result computed:", r);
+    console.log("Rendering result...");
     renderResult(r);
+    console.log("Result rendering complete.");
 
   } catch (error) {
     console.error("Error during scan process:", error);
   } finally {
+    console.log("Hiding loader, showing result wrap.");
     loader.classList.add("hidden");
     resultWrap.classList.remove("hidden");
     // auto-scroll to result
     resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+    console.log("Scroll to result section complete.");
   }
 }
 
